@@ -1,0 +1,2 @@
+# ImitateDouyinVideo
+用RecyclerView实现类似抖音的视频翻页效果
