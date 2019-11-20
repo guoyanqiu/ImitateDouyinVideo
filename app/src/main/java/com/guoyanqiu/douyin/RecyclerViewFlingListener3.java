@@ -47,11 +47,10 @@ public class RecyclerViewFlingListener3 extends RecyclerView.OnFlingListener {
 
     @Override
     public boolean onFling(int velocityX, int velocityY) {
+        Log.e("--", "onFLing");
         //记录滚动开始和结束的位置
         doFlingByMySelf(velocityY);
-//        resetPosition(endPoint);
-        //RecyclerView主动调用这个方法之后，这个方法返回true之后会立即调用OnScrollStateChangedListener的
-        //onScrollStateChanged方法，此时newState为 SCROLL_STATE_IDLE
+//
         return true;
     }
 
@@ -61,23 +60,14 @@ public class RecyclerViewFlingListener3 extends RecyclerView.OnFlingListener {
         int currentPage = getStartPageIndex();
         if (velocityY < 0) {//上一页
             currentPage--;
-            Log.e("--", "上一页currentPage"+currentPage);
         } else if (velocityY > 0) {//下一页
             currentPage++;
-            Log.e("--", "下一页"+currentPage);
         }
-
-        if(currentPage<0){
-            currentPage=0;
-        }
-
         int endY = currentPage* mRecyclerView.getHeight();
         if (endY < 0) {
             endY = 0;
         }
-        Log.e("--", "startY==="+startY + "   endY=="+endY);
-
-        scroll(endY-startY);
+        scroll(startY,endY-startY);
     }
 
     public class OnScrollStateChangedListener extends RecyclerView.OnScrollListener {
@@ -85,7 +75,7 @@ public class RecyclerViewFlingListener3 extends RecyclerView.OnFlingListener {
         public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
             //newState==0表示滚动停止，此时需要处理惯性
             if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    Log.e("--", "fling滚动结束");
+                    Log.e("--", "onScrollStateChanged 滚动结束");
                     int absY = Math.abs(mTotalScrollY - mPreTotalScrollY);
                     //如果滑动的距离超过屏幕的一半表示需要滑动到下一页
                     boolean move = absY > recyclerView.getHeight() / 2;
@@ -129,11 +119,12 @@ public class RecyclerViewFlingListener3 extends RecyclerView.OnFlingListener {
 
     private Scroller scroller;
 
-    private void scroll(int dy) {
+    private void scroll(int startY,int dy) {
         mHandler.removeCallbacksAndMessages(null);
-        scroller.abortAnimation();
+        scroller.forceFinished(true);
         scroller = new Scroller(mRecyclerView.getContext());
-        scroller.startScroll(0, mTotalScrollY, 0, dy, 300);
+        scroller.startScroll(0, startY, 0, dy, 300);
+        isStopByMySelf=false;
         autoScroll();
     }
 
@@ -143,16 +134,17 @@ public class RecyclerViewFlingListener3 extends RecyclerView.OnFlingListener {
         mHandler.sendMessage(msg);
     }
 
+    private boolean isStopByMySelf = false;
     private Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             if (scroller.computeScrollOffset()) {//滚动尚未结束
 
                 //获取已经滚动的位置
                 int currentY = scroller.getCurrY();
-                Log.e("--", "autoStrollView=="+currentY);
                 mRecyclerView.scrollBy(0, currentY-mTotalScrollY);
                 autoScroll();
             }else{
+                isStopByMySelf=true;
                 Log.e("--", "scrollBy滚动结束");
                 mRecyclerView.stopScroll();
                 mPreTotalScrollY=mTotalScrollY;

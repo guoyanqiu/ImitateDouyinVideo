@@ -4,6 +4,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
+
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import java.util.ArrayList;
@@ -35,6 +37,7 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
     @Override
     public void onBindViewHolder(final ItemViewHolder holder, final int position) {
         final int imgId = data.get(position);
+        holder.txt.setText(""+position);
         Glide.with(holder.image.getContext()).load(holder.image.getResources().getDrawable(imgId)).into(holder.image);
     }
 
@@ -45,9 +48,11 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
     static class ItemViewHolder extends RecyclerView.ViewHolder {
 
         private ImageView image;
+        private TextView txt;
         private ItemViewHolder(final View itemView) {
             super(itemView);
             image = itemView.findViewById(R.id.img);
+            txt = itemView.findViewById(R.id.pageNum);
 
         }
     }
