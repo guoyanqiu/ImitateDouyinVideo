@@ -90,6 +90,7 @@ public class RecyclerViewFlingListener3 extends RecyclerView.OnFlingListener {
 
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            if(!isScollByMyself)
             mTotalScrollY += dy;
         }
     }
@@ -124,7 +125,7 @@ public class RecyclerViewFlingListener3 extends RecyclerView.OnFlingListener {
         scroller.forceFinished(true);
         scroller = new Scroller(mRecyclerView.getContext());
         scroller.startScroll(0, startY, 0, dy, 300);
-        isStopByMySelf=false;
+        isScollByMyself=true;
         autoScroll();
     }
 
@@ -134,7 +135,7 @@ public class RecyclerViewFlingListener3 extends RecyclerView.OnFlingListener {
         mHandler.sendMessage(msg);
     }
 
-    private boolean isStopByMySelf = false;
+    private boolean isScollByMyself = false;
     private Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             if (scroller.computeScrollOffset()) {//滚动尚未结束
@@ -144,9 +145,10 @@ public class RecyclerViewFlingListener3 extends RecyclerView.OnFlingListener {
                 mRecyclerView.scrollBy(0, currentY-mTotalScrollY);
                 autoScroll();
             }else{
-                isStopByMySelf=true;
+                isScollByMyself=false;
                 Log.e("--", "scrollBy滚动结束");
                 mRecyclerView.stopScroll();
+                mTotalScrollY+=scroller.getY()
                 mPreTotalScrollY=mTotalScrollY;
             }
         }
