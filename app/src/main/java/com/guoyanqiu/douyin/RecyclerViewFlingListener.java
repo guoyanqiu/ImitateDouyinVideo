@@ -2,7 +2,6 @@ package com.guoyanqiu.douyin;
 
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Scroller;
@@ -89,7 +88,7 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
     private void doFlingByMySelf(int velocityY,boolean isFling) {
         this.isFling = isFling;
         //获取开始滚动时所在页面的index
-        int currentPage = getStartPageIndex();
+        int currentPage = getCurrentPageIndex();
         if (velocityY < 0) {//上一页
             currentPage--;
         } else if (velocityY > 0) {//下一页
@@ -105,14 +104,22 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
 
     }
 
-    private int getPageIndex() {
+    /**
+     * 获取即将出来的最新页
+     * @return
+     */
+    private int getNewPageIndex() {
         if (mRecyclerView.getHeight() == 0) {
             return 0;
         }
         return mTotalScrollY / mRecyclerView.getHeight();
     }
 
-    private int getStartPageIndex() {
+    /**
+     * 获取当前为第几页
+     * @return
+     */
+    private int getCurrentPageIndex() {
         if (mRecyclerView.getHeight() == 0) {
             //没有宽高无法处理
             return 0;
@@ -136,9 +143,8 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
         Message msg = Message.obtain();
         mHandler.sendMessage(msg);
     }
-    int mCurrentPage=0;
     private Handler mHandler = new Handler() {
-
+        int mCurrentPage=0;
         public void handleMessage(Message msg) {
             if (scroller.computeScrollOffset()) {//滚动尚未结束
                 //获取已经滚动的位置
@@ -147,7 +153,7 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
                 autoScroll();
             } else {
                 if (null != mOnPageChangeListener) {
-                    int currentPage = getPageIndex();
+                    int currentPage = getNewPageIndex();
                     if (mCurrentPage != currentPage) {
                         mOnPageChangeListener.onPageChange(currentPage);
                     }
@@ -173,3 +179,8 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
 
     }
 }
+
+/**
+ 所以
+
+ */
