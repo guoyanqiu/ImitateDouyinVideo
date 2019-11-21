@@ -181,6 +181,7 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
 }
 
 /**
- 所以
+ 所以分页加载的思路就很简单：
+ 假设RecyclerView的高度为h,且item的高度也是h,那么上次滚动的距离scrollY/h就是当前页数
 
  */
