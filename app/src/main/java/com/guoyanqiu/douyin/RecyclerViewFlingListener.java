@@ -50,7 +50,7 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
 
     @Override
     public boolean onFling(int velocityX, int velocityY) {
-        doFlingByMySelf(velocityY);
+        doFlingByMySelf(velocityY,true);
         return true;
     }
 
@@ -62,22 +62,18 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
                 return;
             }
             int diff = mTotalScrollY - mStartScrollY;
-            if(diff==0){
-                return;
-            }
+
             if (diff < 0) {//上一页
-                Log.i("d","diff===上一页" + diff);
             } else if (diff > 0) {//下一页
-                Log.i("d","diff===下一页"+diff);
             }
-            Log.i("d","diff===mTotalScrollY=="+mTotalScrollY+ "   mStartScrollY"+mStartScrollY);
             //如果滑动的距离超过屏幕的一半表示需要滑动到下一页
             boolean move = Math.abs(diff) > recyclerView.getHeight() / 2;
             int velocityY = 0;
             if (move) {
                 velocityY = diff < 0 ? -1 : 1;
+
             }
-            doFlingByMySelf(velocityY);
+            doFlingByMySelf(velocityY,false);
         }
 
         @Override
@@ -88,10 +84,12 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
         }
     }
 
-    private void doFlingByMySelf(int velocityY) {
+    @Deprecated
+    private boolean isFling = false;//暂时用不到
+    private void doFlingByMySelf(int velocityY,boolean isFling) {
+        this.isFling = isFling;
         //获取开始滚动时所在页面的index
         int currentPage = getStartPageIndex();
-        Log.i("d","diff===当前页" + currentPage );
         if (velocityY < 0) {//上一页
             currentPage--;
         } else if (velocityY > 0) {//下一页
@@ -104,6 +102,7 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
         //剩下的距离
         int scrollDistance = endY-mTotalScrollY;
         scroll(mTotalScrollY, scrollDistance);
+
     }
 
     private int getPageIndex() {
@@ -126,11 +125,8 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
     }
 
     private Scroller scroller;
-
-    private int startY;
     private void scroll(int startY, int dy) {
         scroller.forceFinished(true);
-        this.startY = startY;
         scroller = new Scroller(mRecyclerView.getContext());
         scroller.startScroll(0, startY, 0, dy, 300);
         autoScroll();
