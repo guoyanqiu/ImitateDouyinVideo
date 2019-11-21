@@ -24,6 +24,13 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
         data.add(R.drawable.five);
         data.add(R.drawable.six);
         data.add(R.drawable.seven);
+        data.add(R.drawable.one);
+        data.add(R.drawable.two);
+        data.add(R.drawable.three);
+        data.add(R.drawable.four);
+        data.add(R.drawable.five);
+        data.add(R.drawable.six);
+        data.add(R.drawable.seven);
     }
 
 

@@ -1,10 +1,10 @@
 package com.guoyanqiu.douyin;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Scroller;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,13 +22,15 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
 
     //竖直方向滚动的总距离
     private int mTotalScrollY = 0;
-    //上次滚动的总距离
-    private int mPreTotalScrollY = 0;
-    private ValueAnimator mAnimator = null;
+    //当前滚动的位置
+    private int mStartScrollY = 0;
+
     private onPageChangeListener mOnPageChangeListener;
 
     public void bindRecyclerView(RecyclerView recycleView) {
         mRecyclerView = recycleView;
+        mRecyclerView.setOnTouchListener(new OnTouchListener());
+        scroller = new Scroller(mRecyclerView.getContext());
         //处理滑动
         recycleView.setOnFlingListener(this);
         //设置滚动监听，记录滚动的状态，和总的偏移量
@@ -41,100 +43,67 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
             @Override
             public void run() {
                 mTotalScrollY = mRecyclerView.getHeight() * position;
-                mPreTotalScrollY = mTotalScrollY;
+                mStartScrollY = mTotalScrollY;
             }
         }, 100);
     }
 
-    private void initAnimator(int startPoint, int endPoint) {
-        mAnimator = new ValueAnimator().ofInt(startPoint, endPoint);
-        mAnimator.setDuration(300);
-        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                int nowPoint = (int) animation.getAnimatedValue();
-                int dy = nowPoint - mTotalScrollY;
-                //这里通过RecyclerView的scrollBy方法实现滚动。
-                mRecyclerView.scrollBy(0, dy);
-
-            }
-        });
-        mAnimator.addListener(new AnimatorListenerAdapter() {
-            int mPrePageIndex = 0;
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                //回调监听
-                if (null != mOnPageChangeListener) {
-                    int currentPage = getPageIndex();
-                    if (mPrePageIndex != currentPage) {
-                        //currentPage > mPrePageIndex 说明是向上滑动
-                        mOnPageChangeListener.onPageChange(currentPage);
-                    }
-                    mPrePageIndex = currentPage;
-                }
-
-                mRecyclerView.stopScroll();
-                mPreTotalScrollY = mTotalScrollY;
-            }
-        });
-    }
-
     @Override
     public boolean onFling(int velocityX, int velocityY) {
-        //记录滚动开始和结束的位置
-        final int startPoint = mTotalScrollY;
+        doFlingByMySelf(velocityY);
+        return true;
+    }
+
+
+    private class OnScrollStateChangedListener extends RecyclerView.OnScrollListener {
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            if (newState != RecyclerView.SCROLL_STATE_IDLE) {
+                return;
+            }
+            int diff = mTotalScrollY - mStartScrollY;
+            if(diff==0){
+                return;
+            }
+            if (diff < 0) {//上一页
+                Log.i("d","diff===上一页" + diff);
+            } else if (diff > 0) {//下一页
+                Log.i("d","diff===下一页"+diff);
+            }
+            Log.i("d","diff===mTotalScrollY=="+mTotalScrollY+ "   mStartScrollY"+mStartScrollY);
+            //如果滑动的距离超过屏幕的一半表示需要滑动到下一页
+            boolean move = Math.abs(diff) > recyclerView.getHeight() / 2;
+            int velocityY = 0;
+            if (move) {
+                velocityY = diff < 0 ? -1 : 1;
+            }
+            doFlingByMySelf(velocityY);
+        }
+
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            if(dy!=0){
+                mTotalScrollY += dy;
+            }
+        }
+    }
+
+    private void doFlingByMySelf(int velocityY) {
         //获取开始滚动时所在页面的index
         int currentPage = getStartPageIndex();
+        Log.i("d","diff===当前页" + currentPage );
         if (velocityY < 0) {//上一页
             currentPage--;
         } else if (velocityY > 0) {//下一页
             currentPage++;
         }
-
-        //更具不同的速度判断需要滚动的方向
-        //注意，此处有一个技巧，就是当速度为0的时候就滚动会开始的页面，即实现页面复位
-        int endPoint = currentPage* mRecyclerView.getHeight();
-        if (endPoint < 0) {
-            endPoint = 0;
+        int endY = currentPage * mRecyclerView.getHeight();
+        if (endY < 0) {
+            endY = 0;
         }
-
-//        //使用动画处理滚动
-        if (mAnimator == null) {
-            initAnimator(startPoint, endPoint);
-        } else {
-            mAnimator.cancel();
-            mAnimator.setIntValues(startPoint, endPoint);
-        }
-
-        mAnimator.start();
-        //RecyclerView主动调用这个方法之后，这个方法返回true之后会立即调用OnScrollStateChangedListener的
-        //onScrollStateChanged方法，此时newState为 SCROLL_STATE_IDLE
-        return true;
-    }
-
-
-    public class OnScrollStateChangedListener extends RecyclerView.OnScrollListener {
-        @Override
-        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-            //newState==0表示滚动停止，此时需要处理惯性
-            if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                int absY = Math.abs(mTotalScrollY - mPreTotalScrollY);
-                //如果滑动的距离超过屏幕的一半表示需要滑动到下一页
-                boolean move = absY > recyclerView.getHeight() / 2;
-                int velocityY = 0;
-                if (move) {
-                    velocityY = mTotalScrollY - mPreTotalScrollY < 0 ? -1000 : 1000;
-                }
-                onFling(0, velocityY);
-            }
-        }
-
-        @Override
-        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-
-            mTotalScrollY += dy;
-        }
+        //剩下的距离
+        int scrollDistance = endY-mTotalScrollY;
+        scroll(mTotalScrollY, scrollDistance);
     }
 
     private int getPageIndex() {
@@ -149,16 +118,62 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
             //没有宽高无法处理
             return 0;
         }
-        return mPreTotalScrollY / mRecyclerView.getHeight();
+        return mStartScrollY / mRecyclerView.getHeight();
     }
 
     public void setOnPageChangeListener(onPageChangeListener listener) {
         mOnPageChangeListener = listener;
     }
 
-    public interface onPageChangeListener {
-        void onPageChange(int currentPage);
+    private Scroller scroller;
+
+    private int startY;
+    private void scroll(int startY, int dy) {
+        scroller.forceFinished(true);
+        this.startY = startY;
+        scroller = new Scroller(mRecyclerView.getContext());
+        scroller.startScroll(0, startY, 0, dy, 300);
+        autoScroll();
     }
 
+    private void autoScroll() {
+        Message msg = Message.obtain();
+        mHandler.sendMessage(msg);
+    }
+    int mCurrentPage=0;
+    private Handler mHandler = new Handler() {
 
+        public void handleMessage(Message msg) {
+            if (scroller.computeScrollOffset()) {//滚动尚未结束
+                //获取已经滚动的位置
+                int currentY = scroller.getCurrY();
+                mRecyclerView.scrollBy(0, currentY - mTotalScrollY);
+                autoScroll();
+            } else {
+                if (null != mOnPageChangeListener) {
+                    int currentPage = getPageIndex();
+                    if (mCurrentPage != currentPage) {
+                        mOnPageChangeListener.onPageChange(currentPage);
+                    }
+                    mCurrentPage = currentPage;
+                }
+                //主要是设置mRecyclerView的滚动状态为SCROLL_STATE_IDLE
+                mRecyclerView.stopScroll();
+                mStartScrollY = mTotalScrollY;
+            }
+        }
+    };
+
+    private class OnTouchListener implements View.OnTouchListener {
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                scroller.forceFinished(true);
+                mStartScrollY = mTotalScrollY;
+            }
+            return false;
+        }
+
+    }
 }
