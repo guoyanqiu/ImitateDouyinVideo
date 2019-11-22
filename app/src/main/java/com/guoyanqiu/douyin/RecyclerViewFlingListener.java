@@ -61,10 +61,6 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
                 return;
             }
             int diff = mTotalScrollY - mStartScrollY;
-
-            if (diff < 0) {//上一页
-            } else if (diff > 0) {//下一页
-            }
             //如果滑动的距离超过屏幕的一半表示需要滑动到下一页
             boolean move = Math.abs(diff) > recyclerView.getHeight() / 2;
             int velocityY = 0;
