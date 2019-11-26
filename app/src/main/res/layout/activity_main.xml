@@ -14,11 +14,19 @@
         android:background="#ffffff"
         tools:context=".MainActivity" />
 
-    <VideoView
+    <View
         android:layout_width="match_parent"
         android:layout_height="2dp"
         android:layout_gravity="center"
         android:background="#ff00ff" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_gravity="center"
+        android:textColor="#ff00ff"
+        android:textSize="18sp"
+        android:gravity="left"
+        android:text="RecyclerView 中间线"
+        android:layout_height="wrap_content" />
 </FrameLayout>
 

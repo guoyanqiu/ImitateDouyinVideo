@@ -44,7 +44,7 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
     @Override
     public void onBindViewHolder(final ItemViewHolder holder, final int position) {
         final int imgId = data.get(position);
-        holder.txt.setText(""+position);
+//        holder.txt.setText(""+position);
         Glide.with(holder.image.getContext()).load(holder.image.getResources().getDrawable(imgId)).into(holder.image);
     }
 
