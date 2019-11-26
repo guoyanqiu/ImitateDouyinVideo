@@ -6,6 +6,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Scroller;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.guoyanqiu.douyin.utils.UIHelper;
@@ -28,6 +29,18 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
 
     public void bindRecyclerView(RecyclerView recycleView) {
         mRecyclerView = recycleView;
+//        mRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+//            @Override
+//            public void onChildViewAttachedToWindow(@NonNull View view) {
+//
+//            }
+//
+//            @Override
+//            public void onChildViewDetachedFromWindow(@NonNull View view) {
+//
+//            }
+//        });
+
         mRecyclerView.setOnTouchListener(new OnTouchListener());
         scroller = new Scroller(mRecyclerView.getContext());
         //处理滑动
@@ -127,17 +140,18 @@ public class RecyclerViewFlingListener extends RecyclerView.OnFlingListener {
         mOnPageChangeListener = listener;
     }
 
+
+
+    private void autoScroll() {
+        Message msg = Message.obtain();
+        mHandler.sendMessage(msg);
+    }
     private Scroller scroller;
     private void scroll(int startY, int dy) {
         scroller.forceFinished(true);
         scroller = new Scroller(mRecyclerView.getContext());
         scroller.startScroll(0, startY, 0, dy, 300);
         autoScroll();
-    }
-
-    private void autoScroll() {
-        Message msg = Message.obtain();
-        mHandler.sendMessage(msg);
     }
     private Handler mHandler = new Handler() {
         int mCurrentPage=0;
